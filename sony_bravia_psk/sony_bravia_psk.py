@@ -24,7 +24,7 @@ TIMEOUT = 8 # timeout in seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-class BraviaRC:
+class BraviaRC(object):
 
     def __init__(self, host, psk, mac=None):  # mac address is optional but necessary if we want to turn on the TV
         """Initialize the Sony Bravia RC class."""
