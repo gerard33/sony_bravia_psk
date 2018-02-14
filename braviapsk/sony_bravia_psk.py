@@ -164,7 +164,7 @@ class BraviaRC(object):
             if log_errors:
                 _LOGGER.error("HTTPError: " + str(exception_instance))
         
-         except requests.exceptions.Timeout as exception_instance:
+        except requests.exceptions.Timeout as exception_instance:
             if log_errors:
                 _LOGGER.error("Timeout occurred: " + str(exception_instance))
 
