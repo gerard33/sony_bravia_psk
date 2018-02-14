@@ -85,6 +85,10 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             _LOGGER.error("[W] HTTPError: " + str(exception_instance))
             return False
+        
+        except requests.exceptions.Timeout as exception_instance:
+            _LOGGER.error("[W] Timeout occurred: " + str(exception_instance))
+            return False
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error("[W] Exception: " + str(exception_instance))
@@ -137,6 +141,10 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             if log_errors:
                 _LOGGER.error("HTTPError: " + str(exception_instance))
+        
+        except requests.exceptions.Timeout as exception_instance:
+            if log_errors:
+                _LOGGER.error("Timeout occurred: " + str(exception_instance))
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             if log_errors:
@@ -155,6 +163,10 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             if log_errors:
                 _LOGGER.error("HTTPError: " + str(exception_instance))
+        
+         except requests.exceptions.Timeout as exception_instance:
+            if log_errors:
+                _LOGGER.error("Timeout occurred: " + str(exception_instance))
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             if log_errors:
