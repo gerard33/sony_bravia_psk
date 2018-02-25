@@ -109,7 +109,7 @@ class BraviaRC(object):
         else:
             return True
 
-    def _wakeonlan(self):
+    def _wakeonlan(self,broadcast = "255.255.255.255"):
         if self._mac is not None:
             addr_byte = self._mac.split(':')
             hw_addr = struct.pack('BBBBBB', int(addr_byte[0], 16),
@@ -121,7 +121,7 @@ class BraviaRC(object):
             msg = b'\xff' * 6 + hw_addr * 16
             socket_instance = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             socket_instance.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            socket_instance.sendto(msg, ('<broadcast>', 9))
+            socket_instance.sendto(msg, (broadcast, 9))
             socket_instance.close()
 
     def send_req_ircc(self, params, log_errors=True):
