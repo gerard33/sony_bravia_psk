@@ -7,6 +7,7 @@ Updated by Gerard for use in Home Assistant
     Changes:
     * Use Pre-shared key (PSK) instead of connecting with a pin and the use of a cookie
     * Added function to calculate the media position
+    * added support for custom broadcast address
 """
 import logging
 import base64
@@ -109,7 +110,7 @@ class BraviaRC(object):
         else:
             return True
 
-    def _wakeonlan(self):
+    def _wakeonlan(self,broadcast):
         if self._mac is not None:
             addr_byte = self._mac.split(':')
             hw_addr = struct.pack('BBBBBB', int(addr_byte[0], 16),
@@ -121,7 +122,7 @@ class BraviaRC(object):
             msg = b'\xff' * 6 + hw_addr * 16
             socket_instance = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             socket_instance.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            socket_instance.sendto(msg, ('<broadcast>', 9))
+            socket_instance.sendto(msg, (broadcast, 9))
             socket_instance.close()
 
     def send_req_ircc(self, params, log_errors=True):
@@ -308,9 +309,9 @@ class BraviaRC(object):
         self.bravia_req_json("sony/audio", self._jdata_build("setAudioVolume", {"target": "speaker",
                                                                                 "volume": volume * 100}))
 
-    def turn_on(self):
+    def turn_on(self,broadcast = "255.255.255.255"):
         """Turn the media player on."""
-        self._wakeonlan()
+        self._wakeonlan(broadcast)
 
     def turn_on_command(self):
         """Turn the media player on using command. Only confirmed working on Android, can be used when WOL is not available."""
