@@ -3,22 +3,22 @@ Sony Bravia RC API
 By Antonio Parraga Navarro
 dedicated to Isabel
 
-Updated by Gerard for use in Home Assistant
+Updated by gerard33 for use in Home Assistant
     Changes:
-    * Use Pre-shared key (PSK) instead of connecting with a pin and the use of a cookie
+    * Added option for Pre-shared key (PSK) connection
     * Added function to calculate the media position
 """
-import logging
 import base64
 import collections
 import json
+import logging
+import requests
 import socket
 import struct
-from datetime import datetime
-import time
 import sys
+import time
 
-import requests
+from datetime import datetime
 
 TIMEOUT = 8 # timeout in seconds
 
@@ -26,7 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class BraviaRC(object):
 
-    def __init__(self, host, psk, mac=None):  # mac address is optional but necessary if we want to turn on the TV
+    # mac address is optional but necessary if we want to turn on a non Android TV
+    # psk is optional but prefered method to make connection with TV
+    def __init__(self, host, psk=None, mac=None):
         """Initialize the Sony Bravia RC class."""
 
         self._host = host
@@ -35,6 +37,7 @@ class BraviaRC(object):
         self._cookies = None
         self._commands = []
         self._content_mapping = []
+        self._app_list = {}
 
     def _jdata_build(self, method, params):
         if params:
@@ -126,7 +129,10 @@ class BraviaRC(object):
 
     def send_req_ircc(self, params, log_errors=True):
         """Send an IRCC command via HTTP to Sony Bravia."""
-        headers = {'X-Auth-PSK': self._psk, 'SOAPACTION': '"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"'}
+        if self._psk:
+            headers = {'X-Auth-PSK': self._psk, 'SOAPACTION': '"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"'}
+        else:
+            headers = {'SOAPACTION': '"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"'}
         data = ("<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org" +
                 "/soap/envelope/\" " +
                 "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body>" +
@@ -155,10 +161,14 @@ class BraviaRC(object):
 
     def bravia_req_json(self, url, params, log_errors=True):
         """ Send request command via HTTP json to Sony Bravia."""
+        if self._psk:
+            headers = {'X-Auth-PSK': self._psk}
+        else:
+            headers = ''
         try:
             response = requests.post('http://'+self._host+'/'+url,
                                      data=params.encode("UTF-8"),
-                                     headers={'X-Auth-PSK': self._psk},
+                                     headers=headers,
                                      timeout=TIMEOUT)
         except requests.exceptions.HTTPError as exception_instance:
             if log_errors:
@@ -205,7 +215,8 @@ class BraviaRC(object):
         if not resp.get('error'):
             results = resp.get('result')[0]
             for result in results:
-                if result['source'] in ['tv:dvbc', 'tv:dvbt', 'tv:dvbs']:  # tv:dvbc = via cable, tv:dvbt = via DTT, tv:dvbs = via satellite
+                # tv:dvbc = via cable, tv:dvbt = via DTT, tv:dvbs = via satellite
+                if result['source'] in ['tv:dvbc', 'tv:dvbt', 'tv:dvbs']:
                     original_content_list.extend(self.get_source(result['source']))
 
         resp = self.bravia_req_json("sony/avContent",
@@ -308,12 +319,86 @@ class BraviaRC(object):
         self.bravia_req_json("sony/audio", self._jdata_build("setAudioVolume", {"target": "speaker",
                                                                                 "volume": volume * 100}))
 
+    def _recreate_auth_cookie(self):
+        """The default cookie is for URL/sony. For some commands we need it for the root path."""
+        cookies = requests.cookies.RequestsCookieJar()
+        cookies.set("auth", self._cookies.get("auth"))
+        return cookies
+
+    def load_app_list(self, log_errors=True):
+        """Get the list of installed apps"""
+        headers = {}
+        parsed_objects = {}
+
+        try:
+            if self._psk:
+                cookies = ''
+                headers = {'X-Auth-PSK': self._psk}
+            else:
+                cookies = self._recreate_auth_cookie()
+                headers = ''
+            response = requests.get('http://' + self._host + '/DIAL/sony/applist',
+                                     cookies=cookies,
+                                     headers=headers,
+                                     timeout=TIMEOUT)
+        except requests.exceptions.HTTPError as exception_instance:
+            if log_errors:
+                _LOGGER.error("HTTPError: " + str(exception_instance))
+
+        except Exception as exception_instance:  # pylint: disable=broad-except
+            if log_errors:
+                _LOGGER.error("Exception: " + str(exception_instance))
+        else:
+            content = response.content
+            from xml.dom import minidom
+            parsed_xml = minidom.parseString(content)
+            for obj in parsed_xml.getElementsByTagName("app"):
+                if obj.getElementsByTagName("name")[0].firstChild and obj.getElementsByTagName("id")[0].firstChild:
+                    parsed_objects[str(obj.getElementsByTagName("name")[0].firstChild.nodeValue)] = \
+                    str(obj.getElementsByTagName("id")[0].firstChild.nodeValue)
+
+        return parsed_objects
+
+    def start_app(self, app_name, log_errors=True):
+        """Start an app by name."""
+        if len(self._app_list) == 0:
+            self._app_list = self.load_app_list(log_errors=log_errors)
+        if app_name in self._app_list:
+            return self._start_app(self._app_list[app_name], log_errors=log_errors)
+
+    def _start_app(self, app_id, log_errors=True):
+        """Start an app by id."""
+        try:
+            if self._psk:
+                cookies = ''
+                headers = {'X-Auth-PSK': self._psk}
+            else:
+                cookies = self._recreate_auth_cookie()
+                headers = ''
+            response = requests.post('http://' + self._host + '/DIAL/apps/' + app_id,
+                                     cookies=cookies,
+                                     headers=headers,
+                                     timeout=TIMEOUT)
+        except requests.exceptions.HTTPError as exception_instance:
+            if log_errors:
+                _LOGGER.error("HTTPError: " + str(exception_instance))
+
+        except Exception as exception_instance:  # pylint: disable=broad-except
+            if log_errors:
+                _LOGGER.error("Exception: " + str(exception_instance))
+        else:
+            content = response.content
+            return content
+
     def turn_on(self):
         """Turn the media player on."""
         self._wakeonlan()
 
     def turn_on_command(self):
-        """Turn the media player on using command. Only confirmed working on Android, can be used when WOL is not available."""
+        """Turn the media player on using command.
+        
+        Only confirmed working on Android, can be used when WOL is not available.
+        """
         if self.get_power_status() != 'active':
             self.send_req_ircc(self.get_command_code('TvPower'))
             self.bravia_req_json("sony/system", self._jdata_build("setPowerStatus", {"status": "true"}))
@@ -365,42 +450,22 @@ class BraviaRC(object):
     def media_previous_track(self):
         """Send the previous track command."""
         self.send_req_ircc(self.get_command_code('Prev'))
-
-    def calc_time(self, *times):
-        """Calculate the sum of times, value is returned in HH:MM."""
-        total_secs = 0
-        for tms in times:
-            time_parts = [int(s) for s in tms.split(':')]
-            total_secs += (time_parts[0] * 60 + time_parts[1]) * 60 + time_parts[2]
-        total_secs, sec = divmod(total_secs, 60)
-        hour, minute = divmod(total_secs, 60)
-        if hour >= 24: #set 24:10 to 00:10
-            hour -= 24
-        return ("%02d:%02d" % (hour, minute))
+    
+    def add_seconds(self, tm, secs):
+        """Adds seconds to time (HH:MM:SS).""" 
+        fulldate = datetime.datetime(100, 1, 1, tm.hour, tm.minute, tm.second)
+        fulldate = fulldate + datetime.timedelta(seconds=secs)
+        return fulldate.time()
 
     def playing_time(self, startdatetime, durationsec):
-        """Give starttime, endtime and percentage played."""
-        #get starttime (2017-03-24T00:00:00+0100) and calculate endtime with duration (secs)
-        date_format = "%Y-%m-%dT%H:%M:%S"
-        try:
-            playingtime = datetime.now() - datetime.strptime(startdatetime[:-5], date_format)
-        except TypeError:
-            #https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
-            playingtime = datetime.now() - datetime(*(time.strptime(startdatetime[:-5], date_format)[0:6]))
-        try:
-            starttime = datetime.time(datetime.strptime(startdatetime[:-5], date_format))
-        except TypeError:
-            starttime = datetime.time(datetime(*(time.strptime(startdatetime[:-5], date_format)[0:6])))
-        
-        duration = time.strftime('%H:%M:%S', time.gmtime(durationsec))
-        endtime = self.calc_time(str(starttime), str(duration))
-        starttime = starttime.strftime('%H:%M')
-        perc_playingtime = int(round(((playingtime.seconds / durationsec) * 100),0))
-        playingtime = playingtime.seconds
-
+        """Return starttime and endtime (HH:MM) of TV program."""
+        # startdatetime format 2017-03-24T00:00:00+0100
         return_value = {}
-        return_value['start_time'] = starttime
-        return_value['end_time'] = endtime
-        return_value['media_position'] = playingtime
-        return_value['media_position_perc'] = perc_playingtime
+        startdatetime = startdatetime[:19] # Remove timezone
+
+        starttime = datetime.datetime.strptime(startdatetime, "%Y-%m-%dT%H:%M:%S").time()
+        endtime = self.add_seconds(starttime, durationsec)
+
+        return_value['start_time'] = starttime.strftime("%H:%M")
+        return_value['end_time'] = endtime.strftime("%H:%M")
         return return_value
