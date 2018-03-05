@@ -7,6 +7,7 @@ Updated by gerard33 for use in Home Assistant
     Changes:
     * Added option for Pre-shared key (PSK) connection
     * Added function to calculate the media position
+    * Added support for custom broadcast address by mm7d
 """
 import base64
 import collections
@@ -111,7 +112,7 @@ class BraviaRC(object):
         else:
             return True
 
-    def _wakeonlan(self):
+    def _wakeonlan(self, broadcast):
         if self._mac is not None:
             addr_byte = self._mac.split(':')
             hw_addr = struct.pack('BBBBBB', int(addr_byte[0], 16),
@@ -123,7 +124,7 @@ class BraviaRC(object):
             msg = b'\xff' * 6 + hw_addr * 16
             socket_instance = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             socket_instance.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            socket_instance.sendto(msg, ('<broadcast>', 9))
+            socket_instance.sendto(msg, (broadcast, 9))
             socket_instance.close()
 
     def send_req_ircc(self, params, log_errors=True):
@@ -389,9 +390,9 @@ class BraviaRC(object):
             content = response.content
             return content
 
-    def turn_on(self):
+    def turn_on(self, broadcast="255.255.255.255"):
         """Turn the media player on."""
-        self._wakeonlan()
+        self._wakeonlan(broadcast)
 
     def turn_on_command(self):
         """Turn the media player on using command.
