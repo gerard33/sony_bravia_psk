@@ -10,6 +10,7 @@ Updated by gerard33 for use in Home Assistant
 """
 import base64
 import collections
+import datetime
 import json
 import logging
 import requests
@@ -17,8 +18,6 @@ import socket
 import struct
 import sys
 import time
-
-from datetime import datetime
 
 TIMEOUT = 8 # timeout in seconds
 
