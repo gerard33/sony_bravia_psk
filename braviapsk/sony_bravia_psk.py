@@ -327,16 +327,15 @@ class BraviaRC(object):
 
     def load_app_list(self, log_errors=True):
         """Get the list of installed apps"""
+        cookies = ''
         headers = {}
         parsed_objects = {}
 
         try:
             if self._psk:
-                cookies = ''
                 headers = {'X-Auth-PSK': self._psk}
             else:
                 cookies = self._recreate_auth_cookie()
-                headers = ''
             response = requests.get('http://' + self._host + '/DIAL/sony/applist',
                                      cookies=cookies,
                                      headers=headers,
@@ -368,13 +367,13 @@ class BraviaRC(object):
 
     def _start_app(self, app_id, log_errors=True):
         """Start an app by id."""
+        cookies = ''
+        headers = {}
         try:
             if self._psk:
-                cookies = ''
                 headers = {'X-Auth-PSK': self._psk}
             else:
                 cookies = self._recreate_auth_cookie()
-                headers = ''
             response = requests.post('http://' + self._host + '/DIAL/apps/' + app_id,
                                      cookies=cookies,
                                      headers=headers,
