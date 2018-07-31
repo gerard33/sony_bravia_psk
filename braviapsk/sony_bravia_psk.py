@@ -163,7 +163,7 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             if log_errors:
                 _LOGGER.error("HTTPError: " + str(exception_instance))
-        
+
         except requests.exceptions.Timeout as exception_instance:
             if log_errors:
                 _LOGGER.error("Timeout occurred: " + str(exception_instance))
@@ -174,7 +174,7 @@ class BraviaRC(object):
 
         else:
             response = json.loads(response.content.decode('utf-8'))
-            if "error" in response:
+            if "error" in response and log_errors:
                 _LOGGER.error(
                     "Invalid response: %s\n  request path: %s\n  request params: %s" % (
                         response, url, params))
@@ -231,7 +231,7 @@ class BraviaRC(object):
     def get_playing_info(self):
         """Get information on program that is shown on TV."""
         return_value = {}
-        resp = self.bravia_req_json("sony/avContent", self._jdata_build("getPlayingContentInfo", None))
+        resp = self.bravia_req_json("sony/avContent", self._jdata_build("getPlayingContentInfo", None), False)
         if resp is not None and not resp.get('error'):
             playing_content_data = resp.get('result')[0]
             return_value['programTitle'] = playing_content_data.get('programTitle')
