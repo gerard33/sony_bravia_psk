@@ -173,8 +173,12 @@ class BraviaRC(object):
                 _LOGGER.error("Exception: " + str(exception_instance))
 
         else:
-            html = json.loads(response.content.decode('utf-8'))
-            return html
+            response = json.loads(response.content.decode('utf-8'))
+            if "error" in response:
+                _LOGGER.error(
+                    "Invalid response: %s\n  request path: %s\n  request params: %s" % (
+                        response, url, params))
+            return response
 
     def send_command(self, command):
         """Sends a command to the TV."""
