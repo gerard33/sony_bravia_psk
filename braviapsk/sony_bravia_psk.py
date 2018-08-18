@@ -372,41 +372,21 @@ class BraviaRC(object):
         """Send the previous track command."""
         self.send_req_ircc(self.get_command_code('Prev'))
 
-    def calc_time(self, *times):
-        """Calculate the sum of times, value is returned in HH:MM."""
-        total_secs = 0
-        for tms in times:
-            time_parts = [int(s) for s in tms.split(':')]
-            total_secs += (time_parts[0] * 60 + time_parts[1]) * 60 + time_parts[2]
-        total_secs, sec = divmod(total_secs, 60)
-        hour, minute = divmod(total_secs, 60)
-        if hour >= 24: #set 24:10 to 00:10
-            hour -= 24
-        return ("%02d:%02d" % (hour, minute))
+    def add_seconds(self, tm, secs):
+        """Adds seconds to time (HH:MM:SS).""" 
+        fulldate = datetime.datetime(100, 1, 1, tm.hour, tm.minute, tm.second)
+        fulldate = fulldate + datetime.timedelta(seconds=secs)
+        return fulldate.time()
 
     def playing_time(self, startdatetime, durationsec):
-        """Give starttime, endtime and percentage played."""
-        #get starttime (2017-03-24T00:00:00+0100) and calculate endtime with duration (secs)
-        date_format = "%Y-%m-%dT%H:%M:%S"
-        try:
-            playingtime = datetime.now() - datetime.strptime(startdatetime[:-5], date_format)
-        except TypeError:
-            #https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
-            playingtime = datetime.now() - datetime(*(time.strptime(startdatetime[:-5], date_format)[0:6]))
-        try:
-            starttime = datetime.time(datetime.strptime(startdatetime[:-5], date_format))
-        except TypeError:
-            starttime = datetime.time(datetime(*(time.strptime(startdatetime[:-5], date_format)[0:6])))
-        
-        duration = time.strftime('%H:%M:%S', time.gmtime(durationsec))
-        endtime = self.calc_time(str(starttime), str(duration))
-        starttime = starttime.strftime('%H:%M')
-        perc_playingtime = int(round(((playingtime.seconds / durationsec) * 100),0))
-        playingtime = playingtime.seconds
-
+        """Return starttime and endtime (HH:MM) of TV program."""
+        # startdatetime format 2017-03-24T00:00:00+0100
         return_value = {}
-        return_value['start_time'] = starttime
-        return_value['end_time'] = endtime
-        return_value['media_position'] = playingtime
-        return_value['media_position_perc'] = perc_playingtime
+        startdatetime = startdatetime[:19] # Remove timezone
+
+        starttime = datetime.datetime.strptime(startdatetime, "%Y-%m-%dT%H:%M:%S").time()
+        endtime = self.add_seconds(starttime, durationsec)
+
+        return_value['start_time'] = starttime.strftime("%H:%M")
+        return_value['end_time'] = endtime.strftime("%H:%M")
         return return_value
