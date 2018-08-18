@@ -322,7 +322,7 @@ class BraviaRC(object):
         """Turn the media player on using command. Only confirmed working on Android, can be used when WOL is not available."""
         if self.get_power_status() != 'active':
             self.send_req_ircc(self.get_command_code('TvPower'))
-            self.bravia_req_json("sony/system", self._jdata_build("setPowerStatus", {"status": "true"}))
+            self.bravia_req_json("sony/system", self._jdata_build("setPowerStatus", {"status": True}))
 
     def turn_off(self):
         """Turn off media player."""
