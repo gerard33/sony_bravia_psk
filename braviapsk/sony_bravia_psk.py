@@ -305,8 +305,10 @@ class BraviaRC(object):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
+        # API expects string int value within 0..100 range.
+        api_volume = str(int(round(volume * 100)))
         self.bravia_req_json("sony/audio", self._jdata_build("setAudioVolume", {"target": "speaker",
-                                                                                "volume": volume * 100}))
+                                                                                "volume": api_volume}))
 
     def turn_on(self):
         """Turn the media player on."""
