@@ -173,7 +173,7 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             if log_errors:
                 _LOGGER.error("HTTPError: " + str(exception_instance))
-        
+
         except requests.exceptions.Timeout as exception_instance:
             if log_errors:
                 _LOGGER.error("Timeout occurred: " + str(exception_instance))
@@ -183,8 +183,12 @@ class BraviaRC(object):
                 _LOGGER.error("Exception: " + str(exception_instance))
 
         else:
-            html = json.loads(response.content.decode('utf-8'))
-            return html
+            response = json.loads(response.content.decode('utf-8'))
+            if "error" in response and log_errors:
+                _LOGGER.error(
+                    "Invalid response: %s\n  request path: %s\n  request params: %s" % (
+                        response, url, params))
+            return response
 
     def send_command(self, command):
         """Sends a command to the TV."""
@@ -316,8 +320,10 @@ class BraviaRC(object):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
+        # API expects string int value within 0..100 range.
+        api_volume = str(int(round(volume * 100)))
         self.bravia_req_json("sony/audio", self._jdata_build("setAudioVolume", {"target": "speaker",
-                                                                                "volume": volume * 100}))
+                                                                                "volume": api_volume}))
 
     def _recreate_auth_cookie(self):
         """The default cookie is for URL/sony. For some commands we need it for the root path."""
@@ -400,7 +406,7 @@ class BraviaRC(object):
         """
         if self.get_power_status() != 'active':
             self.send_req_ircc(self.get_command_code('TvPower'))
-            self.bravia_req_json("sony/system", self._jdata_build("setPowerStatus", {"status": "true"}))
+            self.bravia_req_json("sony/system", self._jdata_build("setPowerStatus", {"status": True}))
 
     def turn_off(self):
         """Turn off media player."""
