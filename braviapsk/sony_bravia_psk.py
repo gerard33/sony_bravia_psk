@@ -8,15 +8,15 @@ Updated by Gerard for use in Home Assistant
     * Use Pre-shared key (PSK) instead of connecting with a pin and the use of a cookie
     * Added function to calculate the media position
 """
-import logging
 import base64
 import collections
+import datetime
 import json
+import logging
 import socket
 import struct
-from datetime import datetime
-import time
 import sys
+import time
 
 import requests
 
