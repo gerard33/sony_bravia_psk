@@ -85,7 +85,7 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             _LOGGER.error("[W] HTTPError: " + str(exception_instance))
             return False
-        
+
         except requests.exceptions.Timeout as exception_instance:
             _LOGGER.error("[W] Timeout occurred: " + str(exception_instance))
             return False
@@ -126,6 +126,8 @@ class BraviaRC(object):
 
     def send_req_ircc(self, params, log_errors=True):
         """Send an IRCC command via HTTP to Sony Bravia."""
+        if params is None:
+            return False
         headers = {'X-Auth-PSK': self._psk, 'SOAPACTION': '"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"'}
         data = ("<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org" +
                 "/soap/envelope/\" " +
@@ -141,7 +143,7 @@ class BraviaRC(object):
         except requests.exceptions.HTTPError as exception_instance:
             if log_errors:
                 _LOGGER.error("HTTPError: " + str(exception_instance))
-        
+
         except requests.exceptions.Timeout as exception_instance:
             if log_errors:
                 _LOGGER.error("Timeout occurred: " + str(exception_instance))
@@ -261,7 +263,9 @@ class BraviaRC(object):
         if not resp.get('error'):
             self._commands = resp.get('result')[1]
         else:
-            _LOGGER.error("JSON request error: " + json.dumps(resp, indent=4))
+            error = resp.get('error')
+            if "not power-on" not in error:
+                _LOGGER.error("JSON request error: " + json.dumps(resp, indent=4))
 
     def get_command_code(self, command_name):
         if len(self._commands) == 0:
@@ -373,7 +377,7 @@ class BraviaRC(object):
         self.send_req_ircc(self.get_command_code('Prev'))
 
     def add_seconds(self, tm, secs):
-        """Adds seconds to time (HH:MM:SS).""" 
+        """Adds seconds to time (HH:MM:SS)."""
         fulldate = datetime.datetime(100, 1, 1, tm.hour, tm.minute, tm.second)
         fulldate = fulldate + datetime.timedelta(seconds=secs)
         return fulldate.time()
