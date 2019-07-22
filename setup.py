@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pySonyBraviaPSK',
-    version='0.1.7',
+    version='0.1.8',
     description='Library for Sony Bravia TVs with Pre-Shared Key option',
     url='https://github.com/gerard33/sony_bravia_psk',
     maintainer='Gerard',

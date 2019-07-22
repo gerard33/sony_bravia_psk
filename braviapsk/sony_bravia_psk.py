@@ -209,7 +209,10 @@ class BraviaRC(object):
         if not resp.get('error'):
             results = resp.get('result')[0]
             for result in results:
-                if result['source'] in ['tv:dvbc', 'tv:dvbt', 'tv:dvbs']:  # tv:dvbc = via cable, tv:dvbt = via DTT, tv:dvbs = via satellite
+                  # tv:dvbc = via cable, tv:dvbt = via DTT, tv:dvbs = via satellite
+                  # tv:isdbgt = Brazilian Digital TV standard, tv:atsct = via atsct, tv:analog = via analog input
+                if result['source'] in ['tv:dvbc', 'tv:dvbt', 'tv:dvbs', 'tv:isdbt', 'tv:isdbbs', 'tv:isdbcs',
+                                        'tv:isdbgt', 'tv:atsct', 'tv:analog']:
                     original_content_list.extend(self.get_source(result['source']))
 
         resp = self.bravia_req_json("sony/avContent",
