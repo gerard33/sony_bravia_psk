@@ -186,6 +186,13 @@ class BraviaRC(object):
         """Sends a command to the TV."""
         self.send_req_ircc(self.get_command_code(command))
 
+    def open_app(self, uri):
+        """Opens app with given uri."""
+        resp = self.bravia_req_json("sony/appControl",
+                                    self._jdata_build("setActiveApp", {"uri": uri}))
+        if resp.get('error'):
+            _LOGGER.error("ERROR: %s" % resp.get('error'))
+
     def get_source(self, source):
         """Returns list of Sources"""
         original_content_list = []
