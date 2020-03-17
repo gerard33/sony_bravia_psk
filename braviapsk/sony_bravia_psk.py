@@ -335,6 +335,10 @@ class BraviaRC(object):
         """Turn off media player."""
         self.send_req_ircc(self.get_command_code('PowerOff'))
 
+    def turn_off_command(self):
+        """Turn off media player using the rest-api for Android TV."""
+        self.bravia_req_json("sony/system", self._jdata_build("setPowerStatus", {"status": False}))
+
     def volume_up(self):
         """Volume up the media player."""
         self.send_req_ircc(self.get_command_code('VolumeUp'))
