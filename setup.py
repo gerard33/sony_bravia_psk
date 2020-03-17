@@ -5,6 +5,7 @@ setup(
     name='pySonyBraviaPSK',
     version='0.1.9',
     description='Library for Sony Bravia TVs with Pre-Shared Key option',
+    long_description='Library for Sony Bravia TVs with Pre-Shared Key option'
     url='https://github.com/gerard33/sony_bravia_psk',
     maintainer='Gerard',
     license='MIT',
