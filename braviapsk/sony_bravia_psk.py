@@ -316,9 +316,11 @@ class BraviaRC(object):
 
     def get_current_external_input_status(self):
         """Get current external input status."""
-        return_value = {}
+        return_value = []
         resp = self.bravia_req_json(
-            "sony/avContent", self._jdata_build("getCurrentExternalInputsStatus", None)
+            "sony/avContent",
+            self._jdata_build("getCurrentExternalInputsStatus", None),
+            log_errors=False,
         )
         if resp is not None and not resp.get("error"):
             return_value = resp.get("result")[0]
