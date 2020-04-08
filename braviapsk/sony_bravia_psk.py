@@ -314,6 +314,16 @@ class BraviaRC(object):
             return_value['gateway'] = network_content_data[0]['gateway']
         return return_value
 
+    def get_current_external_input_status(self):
+        """Get current external input status."""
+        return_value = {}
+        resp = self.bravia_req_json(
+            "sony/avContent", self._jdata_build("getCurrentExternalInputsStatus", None)
+        )
+        if resp is not None and not resp.get("error"):
+            return_value = resp.get("result")[0]
+        return return_value
+
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # API expects string int value within 0..100 range.
