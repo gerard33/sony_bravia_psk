@@ -14,7 +14,7 @@ setup(
     version=version,
     description='Library for Sony Bravia TVs with Pre-Shared Key option',
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
     url='https://github.com/gerard33/sony_bravia_psk',
     maintainer='Gerard',
     license='MIT',
