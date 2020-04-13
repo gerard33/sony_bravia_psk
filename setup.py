@@ -3,11 +3,18 @@ from setuptools import setup, find_packages
 
 from braviapsk.version import __version__ as version
 
+# read the contents of your README file
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='pySonyBraviaPSK',
     version=version,
     description='Library for Sony Bravia TVs with Pre-Shared Key option',
-    long_description='Library for Sony Bravia TVs with Pre-Shared Key option'
+    long_description=long_description,
+    long_description_content_type='text/markdown'
     url='https://github.com/gerard33/sony_bravia_psk',
     maintainer='Gerard',
     license='MIT',
