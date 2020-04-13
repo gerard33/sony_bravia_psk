@@ -1,5 +1,10 @@
 # Sony Bravia PSK Python Package
 
+[![Pypi](https://badge.fury.io/py/pySonyBraviaPSK.svg)](https://pypi.org/project/pysonybraviapsk)
+[![Downloads](https://pepy.tech/badge/pysonybraviapsk/week)](https://pepy.tech/project/pysonybraviapsk/week)
+[![Downloads](https://pepy.tech/badge/pysonybraviapsk/month)](https://pepy.tech/project/pysonybraviapsk/month)
+[![Downloads](https://pepy.tech/badge/pysonybraviapsk)](https://pepy.tech/project/pysonybraviapsk)
+
 ## About
 
 ``sony_bravia_psk`` is a Python library for remote communication with Sony Bravia TVs 2014 and newer which support a Pre-Shared Key
