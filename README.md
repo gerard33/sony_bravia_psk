@@ -4,6 +4,7 @@
 [![Downloads](https://pepy.tech/badge/pysonybraviapsk/week)](https://pepy.tech/project/pysonybraviapsk/week)
 [![Downloads](https://pepy.tech/badge/pysonybraviapsk/month)](https://pepy.tech/project/pysonybraviapsk/month)
 [![Downloads](https://pepy.tech/badge/pysonybraviapsk)](https://pepy.tech/project/pysonybraviapsk)
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg">
 
 ## About
 
