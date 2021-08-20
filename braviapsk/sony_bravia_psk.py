@@ -37,7 +37,7 @@ class BraviaRC(object):
         self._commands = []
         self._content_mapping = []
 
-    def _jdata_build(self, method, params):
+    def _jdata_build(self, method, params=None):
         if params:
             ret = json.dumps(
                 {"method": method, "params": [params], "id": 1, "version": "1.0"}
@@ -97,15 +97,15 @@ class BraviaRC(object):
             response.raise_for_status()
 
         except requests.exceptions.HTTPError as exception_instance:
-            _LOGGER.error("[W] HTTPError: " + str(exception_instance))
+            _LOGGER.exception("[W] HTTPError: " + str(exception_instance))
             return False
 
         except requests.exceptions.Timeout as exception_instance:
-            _LOGGER.error("[W] Timeout occurred: " + str(exception_instance))
+            _LOGGER.exception("[W] Timeout occurred: " + str(exception_instance))
             return False
 
         except Exception as exception_instance:  # pylint: disable=broad-except
-            _LOGGER.error("[W] Exception: " + str(exception_instance))
+            _LOGGER.exception("[W] Exception: " + str(exception_instance))
             return False
 
         else:
@@ -215,6 +215,16 @@ class BraviaRC(object):
         """Send command to the TV."""
         self.send_req_ircc(self.get_command_code(command))
 
+    def load_app_list(self):
+        """Get the list of installed apps."""
+        resp = self.bravia_req_json(
+            "sony/appControl", self._jdata_build("getApplicationList")
+        )
+        if resp.get("error"):
+            _LOGGER.error("ERROR: %s" % resp.get("error"))
+        else:
+            return resp.get("result")[0]
+
     def open_app(self, uri):
         """Open app with given uri."""
         resp = self.bravia_req_json(
@@ -279,6 +289,7 @@ class BraviaRC(object):
                     "extInput:hdmi",
                     "extInput:composite",
                     "extInput:component",
+                    "extInput:cec",
                 ):  # physical inputs
                     resp = self.bravia_req_json(
                         "sony/avContent", self._jdata_build("getContentList", result)
@@ -370,6 +381,8 @@ class BraviaRC(object):
             system_content_data = resp.get("result")[0]
             return_value["name"] = system_content_data.get("name")
             return_value["model"] = system_content_data.get("model")
+            return_value["mac"] = system_content_data.get("mac")
+            return_value["serial"] = system_content_data.get("serial")
             return_value["language"] = system_content_data.get("language")
         return return_value
 
