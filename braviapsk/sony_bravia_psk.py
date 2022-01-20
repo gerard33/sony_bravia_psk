@@ -161,7 +161,7 @@ class BraviaRC(object):
         ).encode("UTF-8")
         try:
             response = requests.post(
-                "http://" + self._host + "/sony/IRCC",
+                "http://" + self._host + "/IRCC",
                 headers=headers,
                 data=data,
                 timeout=TIMEOUT,
