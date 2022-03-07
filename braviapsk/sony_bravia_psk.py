@@ -359,14 +359,17 @@ class BraviaRC(object):
     def get_volume_info(self):
         """Get volume info."""
         resp = self.bravia_req_json(
-            "sony/audio", self._jdata_build("getVolumeInformation", None)
+            "sony/audio",
+            self._jdata_build("getVolumeInformation", None),
+            log_errors=False,
         )
-        if not resp.get("error"):
+        error = resp.get("error")
+        if not error:
             results = resp.get("result")[0]
             for result in results:
                 if result.get("target") == "speaker":
                     return result
-        else:
+        elif 40005 not in error:  # 40005 = "Display is Turned off"
             _LOGGER.error("JSON request error:" + json.dumps(resp, indent=4))
         return None
 
@@ -435,7 +438,9 @@ class BraviaRC(object):
         if self.get_power_status() != "active":
             self.send_req_ircc(self.get_command_code("TvPower"))
             self.bravia_req_json(
-                "sony/system", self._jdata_build("setPowerStatus", {"status": True})
+                "sony/system",
+                self._jdata_build("setPowerStatus", {"status": True}),
+                log_errors=False,
             )
 
     def turn_off(self):
